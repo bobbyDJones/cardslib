@@ -1,0 +1,28 @@
+.pTitle {
+	text-align: center;
+	font-family: consolas;
+}
+
+.roundPContainer {
+	margin-left:10%;
+	width: 80%;
+	height: 80%;
+	text-align: center;
+	border: 1px solid blue;
+	border-radius: 6px;
+	background-color: lightsteelblue;
+	overflow: hidden;
+	position: absolute;
+}
+
+.roundPTable {
+	border: 1px solid steelblue;
+	border-radius: 50%;
+	position: relative;
+	background-color: peru;
+}
+
+.pplayer {
+	height: 10%;
+	position: absolute;
+}
