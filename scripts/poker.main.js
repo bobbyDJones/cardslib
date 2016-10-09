@@ -16,49 +16,51 @@ function setupTable() {
 
 function setupPlayers() {
 	var tableContainer = $(".roundPContainer");
-	var locArray = getAllHumansLocations(tableContainer,numOfPPlayers);
+	var tableOffset = tableContainer.offset();
+	var templateImg = $("#hiddenData").children(".pplayer").first();
+	var playerHeight = (tableContainer.height())/10;
+	var playerWidth = (((playerHeight)/(templateImg.height())) * templateImg.width()); // maintain aspect ratio
+	var locArray = getAllHumansLocations(tableContainer,numOfPPlayers,(playerHeight/2));
 	for(var i = 0; i < numOfPPlayers; i++) {
 		if(currentDealer == i) {
 			// TODO: Something serious lol
 		}
 		var human = $(humanImage);
+		human.height(playerHeight);
 		var currentHuman = tableContainer.append(human);
-		setHumanCenteredLoc(human,locArray[i]);
+		setHumanCenteredLoc(human,locArray[i],tableOffset,playerHeight,playerWidth);
 	}
 }
 
-function setHumanCenteredLoc(currentHuman,loc) {
-	currentHuman.css("left",(loc.x-((currentHuman.width())/2)));
-	currentHuman.css("top",(loc.y-((currentHuman.height())/2)));
+function setHumanCenteredLoc(currentHuman,loc,tableOffset,playerHeight,playerWidth) {
+	currentHuman.css("left",(loc.x-(playerWidth/2) - tableOffset.left));
+	currentHuman.css("top",(loc.y-(playerHeight/2) - tableOffset.top));
+	currentHuman.css("transform",("rotate(" + ((((-1*(loc.angle - ((Math.PI)/2))))/(2*(Math.PI)))*360) + "deg)"));
 }
 
-function getAllHumansLocations(tableContainer,numOfPPlayers) {
+function getAllHumansLocations(tableContainer,numOfPPlayers,radiusOffset) {
 	// I know there's probably some lib out there that can do shit but didn't wanna bother looking for one
 	var result = [];
 	var pTable = $(".roundPTable");
-	var circumference = Math.PI*(pTable.width());
-	var circularDiffs = circumference/numOfPPlayers;
+	var radius = ((pTable.width())/2) + radiusOffset;
+	var currentAngle = (Math.PI)/2;
+	var diffAngle = (2*(Math.PI))/numOfPPlayers;
 	
 	var lastCoord;
 	for(var i = 0; i < numOfPPlayers; i++) {
 		var currentCoord;
-		if(i == 0) {
-			currentCoord = {x: ((tableContainer.width())/2),y: (pTable.position().top) angle: 0};
-		} else {
-			//currentCoord = getCircularCoords(lastCoord,circularDiffs,pTable.width()/2,(2*Math.PI)/numOfPPlayers);
-		}
+		// Set relative to circle center
+		currentCoord = {x: (radius*(Math.cos(currentAngle))),y: (radius*(Math.sin(currentAngle))), angle: currentAngle};
+		currentAngle-=diffAngle;
+		
+		// Adjust for table center
+		currentCoord.x+=(pTable.width()/2 + pTable.offset().left);
+		currentCoord.y= (-1*(currentCoord.y)) + ((pTable.height()/2) + pTable.offset().top);
 		lastCoord = currentCoord;
 		result.push(currentCoord);
 	}
 	
 	return result;	
-}
-
-function getCircularCoords(lastCoord,circularDiffs,radius,angle) {
-	var newCoord;
-	var equalAngles = (Math.PI-angle)/2;
-	var lineLength = ((radius/(Math.sin(equalAngles)))*(Math.sin(angle)));
-	return newCoord;
 }
 
 function setupTableDimensions() {
