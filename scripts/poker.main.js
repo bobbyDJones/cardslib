@@ -9,6 +9,9 @@ var cardsPerPerson = 2; // Depending on the type of game (eg. 5 card poker)
 var humanImage = "<img class=\"" + pokerPlayerClass + "\" src=\"images\\humanSymbol.jpeg\">";
 var cardImage = "<img class=\"" + pokerCardClass + "\" src=\"images\\playing-card-back.jpg\">";
 
+// Just a template, DON'T ASSIGN A VALUE FOOL!
+var cardAnimTemplate = undefined;
+
 var currentDealer = 0;
 
 
@@ -35,10 +38,24 @@ function setupPlayerAndCardLocs() {
 	var tableContainer = $(pokerContainerClass);
 	var tableOffset = tableContainer.offset();
 	setupPlayers(tableContainer,tableOffset);
-	setupCardLocs(tableContainer,tableOffset);
+	setupCards(tableContainer,tableOffset);
+}
+
+function setupCards(tableContainer,tableOffset) {
+	if(cardAnimTemplate === undefined) {
+		// Load card animation template
+		$.get( "http://urface.neocities.org/cardAnimationTemplate.css", function( data ) { //TODO: Change upon server upload  to "styles/cardAnimationTemplate.hss"
+			cardAnimTemplate = data;
+			console.log( cardAnimTemplate ); // TODO: Remove
+			setupCardLocs(tableContainer,tableOffset);
+		});
+	} else {
+		setupCardLocs(tableContainer,tableOffset);
+	}
 }
 
 function setupCardLocs(tableContainer,tableOffset) {
+	
 	// Setup however many card images
 	var templateImg = $("#hiddenData").children("."+pokerCardClass).first();
 	var cardHeight = (tableContainer.height())/40;
