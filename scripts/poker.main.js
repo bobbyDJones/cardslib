@@ -15,7 +15,9 @@ var cardAnimTemplate = "\n.{className}\n{\n	-webkit-animation:{keyFrameName} 2s 
 
 var customStyleNode = undefined;
 
-var currentDealer = 3;
+var interCardDealSpeed = 1000; // Could vary depending on how fast the dealer deals out the cards. I would be a much higher number ;)
+var currentDealer = 0;
+var cardsDealt = false;
 
 
 $(document).ready(function(){ 
@@ -71,8 +73,20 @@ function setupCardLocs(tableContainer,tableOffset) {
 	var dealerCardLocArray = getCircularLocations(tableContainer,numOfPPlayers,(-30-cardHeight),0);
 	var dealerDeckLoc = dealerCardLocArray[currentDealer];
 	
+	var cardClassMaps = [];
+	
+	// TODO: Remove below if not dealing:
+	cardsDealt = false;
+	var deckCard = $(cardImage);
+	deckCard.height(cardHeight);
+	tableContainer.append(deckCard);
+	setItemCenteredLoc(deckCard,dealerDeckLoc,tableOffset,cardHeight,cardWidth);
+	
 	for(var j = 0; j < cardsPerPerson; j++) {
 		var cardLocArray = getCircularLocations(tableContainer,numOfPPlayers,-20,offsetAmtArr[j]);
+		// TODO: Remove below if not dealing:
+		var playerIdx = (currentDealer+1)%numOfPPlayers;
+		
 		for(var i = 0; i < numOfPPlayers; i++) {
 			var card = $(cardImage);
 			card.height(cardHeight);
@@ -82,13 +96,31 @@ function setupCardLocs(tableContainer,tableOffset) {
 			// TODO: Disable re-dealing when window resized
 			// Animate from Dealer to Dealee
 			var clsName = "cardanim" + uniqueCardAnimId;
-			var customTemplate = buildUniqueAnim(clsName,uniqueCardAnimId,dealerDeckLoc,cardLocArray[i],tableOffset,cardHeight,cardWidth);
+			var customTemplate = buildUniqueAnim(clsName,uniqueCardAnimId,dealerDeckLoc,cardLocArray[playerIdx],tableOffset,cardHeight,cardWidth);
+			playerIdx = (playerIdx+1)%numOfPPlayers;
 			uniqueCardAnimId++;
 			appendCSSSection(customTemplate);
 			
 			// Apply clsName to newly created element starting the animation
-			card.toggleClass(clsName);
+			cardClassMaps.push({"cardObj" : card, "animCls" : clsName});
 		}
+	}
+	
+	if(cardClassMaps.length > 0) {
+		startDealing(0,cardClassMaps,cardClassMaps.length-1);
+	}
+}
+
+function startDealing(idx,cardClassMaps,lastIdx) {
+	var card = cardClassMaps[idx]["cardObj"];
+	var clsName = cardClassMaps[idx]["animCls"];
+	card.toggleClass(clsName);
+	if(idx != lastIdx) {
+		setTimeout(function(){
+			startDealing((idx+1),cardClassMaps,lastIdx);
+		}, interCardDealSpeed);
+	} else {
+		cardsDealt = true;
 	}
 }
 
