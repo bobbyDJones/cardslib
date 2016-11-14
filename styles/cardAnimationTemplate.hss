@@ -1,9 +1,11 @@
+
 .{className}
 {
-	-webkit-animation:{keyFrameName} 5s infinite; /* Chrome, Safari, Opera */
-	animation:{keyFrameName} 5s;
+	-webkit-animation:{keyFrameName} 2s infinite; /* Chrome, Safari, Opera */
+	animation:{keyFrameName} 2s;
 	animation-iteration-count: 1;
 	animation-fill-mode:forwards;
+	animation-timing-function: ease-out;
 }
 
 /* Chrome, Safari, Opera */
