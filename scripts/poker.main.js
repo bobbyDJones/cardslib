@@ -47,19 +47,23 @@ function setupCardLocs(tableContainer,tableOffset) {
 	
 	offsetAmtArr = getOffsetAmts(overLapLowerLayer,cardWidth);
 	// use offsetAmtArr[j]
-	var cardLocArray = getCircularLocations(tableContainer,numOfPPlayers,-20,0);
-	for(var i = 0; i < numOfPPlayers; i++) {
-		var card = $(cardImage);
-		card.height(cardHeight);
-		tableContainer.append(card);
-		setItemCenteredLoc(card,cardLocArray[i],tableOffset,cardHeight,cardWidth);
+	
+	for(var j = 0; j < cardsPerPerson; j++) {
+		var cardLocArray = getCircularLocations(tableContainer,numOfPPlayers,-20,offsetAmtArr[j]);
+		for(var i = 0; i < numOfPPlayers; i++) {
+			var card = $(cardImage);
+			card.height(cardHeight);
+			tableContainer.append(card);
+			setItemCenteredLoc(card,cardLocArray[i],tableOffset,cardHeight,cardWidth);
+		}
 	}
 }
 
 function getOffsetAmts(overLapLowerLayer,cardWidth) {
 	var result = [];
+	result[0]=0;
 	var accumulatingShift = -1*overLapLowerLayer;
-	for(var j = 0; j < cardsPerPerson; j++) {
+	for(var j = 1; j < cardsPerPerson; j++) {
 		result.push(accumulatingShift);
 		accumulatingShift+=(-1*overLapLowerLayer);
 	}
@@ -102,6 +106,17 @@ function getCircularLocations(tableContainer,numOfPPlayers,radiusOffset,rotaryOf
 	var radius = ((pTable.width())/2) + radiusOffset;
 	var currentAngle = (Math.PI)/2;
 	var diffAngle = (2*(Math.PI))/numOfPPlayers;
+	
+	if(rotaryOffset != 0) {
+		var diff = Math.abs(rotaryOffset);
+		var angleDiff = Math.acos((1-((Math.pow(diff,2))/(2*(Math.pow(radius,2))))));
+		// Positive/Negative offset
+		if(rotaryOffset > 0) {
+			currentAngle+=angleDiff;
+		} else {
+			currentAngle-=angleDiff;
+		}
+	}
 	
 	var lastCoord;
 	for(var i = 0; i < numOfPPlayers; i++) {
