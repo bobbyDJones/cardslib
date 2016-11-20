@@ -3,12 +3,14 @@ var pokerContainerClass = ".roundPContainer";
 var pokerTableClass = ".roundPTable";
 var pokerPlayerClass = "pplayer";
 var pokerCardClass = "pcard";
+var deckCardCls = "deckCard";
+var commCardCell = "#commCell";
 
 var numOfPPlayers = 5;
 var cardsPerPerson = 2; // Depending on the type of game (eg. 5 card poker)
 var humanImage = "<img class=\"" + pokerPlayerClass + "\" src=\"images\\humanSymbol.jpeg\">";
 var cardImage = "<img class=\"" + pokerCardClass + "\" src=\"images\\playing-card-back.jpg\">";
-
+var uniqueCardAnimId = 1;
 // Just a template, DON'T ASSIGN A VALUE FOOL!
 // TODO: Remove below and get Ajax (or Pickering) working :P
 var cardAnimTemplate = "\n.{className}\n{\n	-webkit-animation:{keyFrameName} 2s infinite; /* Chrome, Safari, Opera */\n	animation:{keyFrameName} 2s;\n	animation-iteration-count: 1;\n	animation-fill-mode:forwards;\n animation-timing-function: ease-out;}\n\n/* Chrome, Safari, Opera */\n@-webkit-keyframes {keyFrameName}\n{\n	0%   { left:{initialPosLeft}; top:{initialPosTop};-webkit-transform:rotate({initialPosDeg})}\n	100% {left:{finalPosLeft}; top:{finalPosTop};-webkit-transform:rotate({finalPosDeg})}\n}\n\n/* Standard syntax */\n@keyframes {keyFrameName}\n{\n	0%   { left:{initialPosLeft}; top:{initialPosTop};transform:rotate({initialPosDeg})}\n	100% {left:{finalPosLeft}; top:{finalPosTop};transform:rotate({finalPosDeg})}\n}";
@@ -18,7 +20,12 @@ var customStyleNode = undefined;
 var interCardDealSpeed = 1000; // Could vary depending on how fast the dealer deals out the cards. I would be a much higher number ;)
 var currentDealer = 0;
 var cardsDealt = false;
-
+var stateConstants = {PreDeal: "PreDeal" /* Not used */, PreFlop: "PreFlop", PostDeal: {Flop: "Flop", Turn: "Turn", River: "River", End: "End"}}; // Dunno better way to do enums in javascript, suggestions?
+var generalState = stateConstants.PreDeal;
+var postDealState = undefined;
+var cardHeight;
+var cardWidth;
+var tableOffset = undefined;
 
 $(document).ready(function(){ 
 	setupTable();
@@ -29,6 +36,51 @@ $( window ).resize(function() {
 	setupTable();
 });
 
+$( window ).click(function(){
+	// TODO: Start with betting, server resp., etc.
+	//doNextAction();
+});
+
+function doNextAction() {
+	switch(generalState) {
+		case stateConstants.PreDeal:
+			if(cardsDealt) {
+				generalState = stateConstants.PreFlop;
+				dealToCommunity(3);
+			}
+			break;
+		case stateConstants.PreFlop:
+			generalState = stateConstants.PostDeal;
+			dealToCommunity(1);
+			break;
+		case stateConstants.PostDeal:
+			dealToCommunity(1);
+			break;
+		default:
+	}
+}
+
+function dealToCommunity(cardsToDeal) {
+	var deckCardImg = $("."+deckCardCls);
+	
+	for(var dealIdx = 0; dealIdx<cardsToDeal; dealIdx++) {
+		var flippedCard = flipOverCard(deckCardImg);
+	}
+}
+
+function flipOverCard(deckCardObj) {
+	var newCard = deckCardObj.clone();
+	newCard.removeClass();
+	newCard.toggleClass('communityDeckCard');
+	newCard.attr('style', '');
+	newCard.height(cardHeight);
+	$(".communityPadder").append(newCard);
+	
+	//var clsName = buildCardAnimation(dealerDeckLoc,cardLocArray[playerIdx],tableOffset);
+	return newCard;
+}
+
+
 function setupTable() {
 	setupTableDimensions();
 	setupPlayerAndCardLocs();
@@ -36,17 +88,20 @@ function setupTable() {
 
 function cleanAllGraphics() {
 	$(pokerContainerClass).children("img").remove();
-	$(pokerTableClass).children().remove();
+	//$(pokerTableClass).children().remove();
 }
 
 function setupPlayerAndCardLocs() {
 	var tableContainer = $(pokerContainerClass);
-	var tableOffset = tableContainer.offset();
+	tableOffset = tableContainer.offset();
 	setupPlayers(tableContainer,tableOffset);
 	setupCards(tableContainer,tableOffset);
 }
 
 function setupCards(tableContainer,tableOffset) {
+	var templateImg = $("#hiddenData").children("."+pokerCardClass).first();
+	cardHeight = (tableContainer.height())/40;
+	cardWidth = (((cardHeight)/(templateImg.height())) * templateImg.width()); // maintain aspect ratio
 	if(cardAnimTemplate === undefined) {
 		// Load card animation template
 		$.get( "styles/cardAnimationTemplate.hss", function( data ) {
@@ -62,11 +117,8 @@ function setupCards(tableContainer,tableOffset) {
 function setupCardLocs(tableContainer,tableOffset) {
 	
 	// Setup however many card images
-	var templateImg = $("#hiddenData").children("."+pokerCardClass).first();
-	var cardHeight = (tableContainer.height())/40;
-	var cardWidth = (((cardHeight)/(templateImg.height())) * templateImg.width()); // maintain aspect ratio
 	var overLapLowerLayer = (1/5)*cardWidth;
-	var uniqueCardAnimId = 1;
+	
 	
 	offsetAmtArr = getOffsetAmts(overLapLowerLayer,cardWidth);
 	
@@ -81,6 +133,7 @@ function setupCardLocs(tableContainer,tableOffset) {
 	deckCard.height(cardHeight);
 	tableContainer.append(deckCard);
 	setItemCenteredLoc(deckCard,dealerDeckLoc,tableOffset,cardHeight,cardWidth);
+	deckCard.toggleClass(deckCardCls);
 	
 	for(var j = 0; j < cardsPerPerson; j++) {
 		var cardLocArray = getCircularLocations(tableContainer,numOfPPlayers,-20,offsetAmtArr[j]);
@@ -95,11 +148,8 @@ function setupCardLocs(tableContainer,tableOffset) {
 			
 			// TODO: Disable re-dealing when window resized
 			// Animate from Dealer to Dealee
-			var clsName = "cardanim" + uniqueCardAnimId;
-			var customTemplate = buildUniqueAnim(clsName,uniqueCardAnimId,dealerDeckLoc,cardLocArray[playerIdx],tableOffset,cardHeight,cardWidth);
+			clsName = buildCardAnimation(dealerDeckLoc,cardLocArray[playerIdx],tableOffset);
 			playerIdx = (playerIdx+1)%numOfPPlayers;
-			uniqueCardAnimId++;
-			appendCSSSection(customTemplate);
 			
 			// Apply clsName to newly created element starting the animation
 			cardClassMaps.push({"cardObj" : card, "animCls" : clsName});
@@ -109,7 +159,47 @@ function setupCardLocs(tableContainer,tableOffset) {
 	if(cardClassMaps.length > 0) {
 		startDealing(0,cardClassMaps,cardClassMaps.length-1);
 	}
+	
 }
+
+function buildCardAnimation(startLoc,endLoc,tableOffset) {
+	var clsName = "cardanim" + uniqueCardAnimId;
+	var customTemplate = buildUniqueAnim(clsName,uniqueCardAnimId,startLoc,endLoc,tableOffset);
+	uniqueCardAnimId++;
+	appendCSSSection(customTemplate);
+	return clsName;
+}
+
+/*function setupCardContainers(totalNumOfCards) {
+	var commCell = $(commCardCell);
+	var commCellHeight;
+	var commCellWidth;
+	var paddingFactor = 0.3;
+	
+	if((cardHeight !== undefined) && (cardWidth !== undefined)) {
+		var heightMargin = paddingFactor*cardHeight;
+		var widthMargin = paddingFactor*cardWidth;
+		
+		commCellHeight = cardHeight;
+		commCellWidth = totalNumOfCards*cardWidth + ((totalNumOfCards-1)*widthMargin);
+		
+		commCell.height(commCellHeight);
+		commCell.width(commCellWidth);
+		marginVertical(commCell,heightMargin);
+		marginHorizontal(commCell,widthMargin);
+	}
+	
+}
+
+function marginVertical(el,padAmount) {
+	el.css('margin-top',padAmount);
+	el.css('margin-bottom',padAmount);
+}
+
+function marginHorizontal(el,padAmount) {
+	el.css('margin-left',padAmount);
+	el.css('margin-right',padAmount);
+}*/
 
 function startDealing(idx,cardClassMaps,lastIdx) {
 	var card = cardClassMaps[idx]["cardObj"];
@@ -124,7 +214,7 @@ function startDealing(idx,cardClassMaps,lastIdx) {
 	}
 }
 
-function buildUniqueAnim(clsName, uniqueId, startLoc, endLoc,tableOffset,cardHeight,cardWidth) {
+function buildUniqueAnim(clsName, uniqueId, startLoc, endLoc,tableOffset) {
 	var customAnimTemplate = cardAnimTemplate;
 	var uniqueKeyFrame = "cardAnimKF" + uniqueId;
 	

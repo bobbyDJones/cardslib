@@ -26,3 +26,23 @@
 	position: absolute;
 }
 
+.tableContainer {
+	height: 100%;
+    width: 100%;
+    display: table;
+    position: absolute;
+}
+
+.communityPadder {
+	display: table-cell;
+    vertical-align: middle;
+}
+
+#commCell{
+	margin: auto;
+}
+
+.communityDeckCard {
+	display: table-cell;
+	margin: auto;
+}
