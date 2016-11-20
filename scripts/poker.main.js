@@ -4,6 +4,8 @@ var pokerTableClass = ".roundPTable";
 var pokerPlayerClass = "pplayer";
 var pokerCardClass = "pcard";
 var deckCardCls = "deckCard";
+var communityPadderCls = ".communityPadder";
+var communityHelperCls = ".communityHelper";
 var commCardCell = "#commCell";
 
 var numOfPPlayers = 5;
@@ -26,6 +28,7 @@ var postDealState = undefined;
 var cardHeight;
 var cardWidth;
 var tableOffset = undefined;
+var finalPTableDim = undefined;
 
 $(document).ready(function(){ 
 	setupTable();
@@ -70,14 +73,21 @@ function dealToCommunity(cardsToDeal) {
 
 function flipOverCard(deckCardObj) {
 	var newCard = deckCardObj.clone();
+	setCommCardStyles(newCard);
+	$(communityPadderCls).append(newCard);
+	
+	//var clsName = buildCardAnimation(dealerDeckLoc,cardLocArray[playerIdx],tableOffset);
+	return newCard;
+}
+
+function setCommCardStyles(newCard) {
 	newCard.removeClass();
 	newCard.toggleClass('communityDeckCard');
 	newCard.attr('style', '');
 	newCard.height(cardHeight);
-	$(".communityPadder").append(newCard);
-	
-	//var clsName = buildCardAnimation(dealerDeckLoc,cardLocArray[playerIdx],tableOffset);
-	return newCard;
+	newCard.css('max-height',finalPTableDim+"px");
+	newCard.css('max-width',finalPTableDim+"px");
+	newCard.css('padding-left',(cardWidth*0.3)+"px");
 }
 
 
@@ -102,6 +112,7 @@ function setupCards(tableContainer,tableOffset) {
 	var templateImg = $("#hiddenData").children("."+pokerCardClass).first();
 	cardHeight = (tableContainer.height())/40;
 	cardWidth = (((cardHeight)/(templateImg.height())) * templateImg.width()); // maintain aspect ratio
+	//$(communityHelperCls).css('margin-left',(-1*cardHeight)); // Dunno why but the community group always starts after contrary to example, weird...
 	if(cardAnimTemplate === undefined) {
 		// Load card animation template
 		$.get( "styles/cardAnimationTemplate.hss", function( data ) {
@@ -339,10 +350,13 @@ function setupTableDimensions() {
 	var tableContainer = $(pokerContainerClass);
 	var pTable = $(pokerTableClass);
 	pTable.height("70%");
-	var finalDim = pTable.height();
-	pTable.width(finalDim);
-	var left = ((tableContainer.width())/2) - (finalDim/2);
-	var top = ((tableContainer.height())/2) - (finalDim/2);
+	finalPTableDim = pTable.height();
+	pTable.width(finalPTableDim);
+	var left = ((tableContainer.width())/2) - (finalPTableDim/2);
+	var top = ((tableContainer.height())/2) - (finalPTableDim/2);
 	pTable.css('left', left);
 	pTable.css('top', top);
+	$(communityPadderCls).height(finalPTableDim);
+	$(communityPadderCls).width(finalPTableDim);
+	
 }
