@@ -110,7 +110,7 @@ function setupPlayerAndCardLocs() {
 
 function setupCards(tableContainer,tableOffset) {
 	var templateImg = $("#hiddenData").children("."+pokerCardClass).first();
-	cardHeight = (tableContainer.height())/40;
+	cardHeight = (tableContainer.height())/30;
 	cardWidth = (((cardHeight)/(templateImg.height())) * templateImg.width()); // maintain aspect ratio
 	//$(communityHelperCls).css('margin-left',(-1*cardHeight)); // Dunno why but the community group always starts after contrary to example, weird...
 	if(cardAnimTemplate === undefined) {
